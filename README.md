@@ -1,1 +1,1 @@
-# Project-Data-Mining
+![**Figure EDA Host Qualities**](images/EDA_Host_qualities.png)
