@@ -113,7 +113,7 @@ The price range resulted a bit sparse so I assigned them into broader intervals:
 
 The dataset shows 50 unique zipcodes and 50 unique cities (or districts) where Paris has approximately 20 zipcodes (or the number of its districts a.k.a arrondissements) and the remaining zipcodes greater than 75020 correspond to the suburbs. In the figure below are the listings in Paris only, where there are a few outliers quite far from the city limits. The size of each listing is proportional to its price
 
-![**Figure Districts of Paris**](images/EDA_Arrondissements copie.png)
+![**Figure Districts of Paris**](images/EDA_Arrondissements_copie.png)
 
 ### *From the review section* 
 
