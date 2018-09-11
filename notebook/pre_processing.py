@@ -1,7 +1,26 @@
 from pre_processing_funk import *
+from analysis_funk import *
+
+# File Urls
+data_raw_path = '../data/raw'
+notebook_path = '../../notebook'
+url_paris_listings_data = 'http://data.insideairbnb.com/france/ile-de-france/paris/2018-08-13/data/listings.csv.gz'
+url_paris_reviews_data = 'http://data.insideairbnb.com/france/ile-de-france/paris/2018-08-13/data/reviews.csv.gz'
+name_of_main_folder = 'Project-Data-Mining'
+project_path = '/Users/iZbra1/Documents/Jupyter-DS/K2DS/Projects/Project-Data-Mining/notebook'
+
+# Download the listings
+confirm_files(name_of_main_folder, url_paris_listings_data)
+# Download the reviews
+confirm_files(name_of_main_folder, url_paris_reviews_data)
+
+# Change directory if necessary.
+os.chdir(notebook_path)
+
+print('Pre-Processing...')
 
 # Load Raw Data
-int_data = '../data/raw/paris_listings.csv'
+int_data = '../data/raw/listings.csv'
 listings_columns_with_dates = ['last_scraped','host_since','first_review','last_review']
 usecols = ['id','last_scraped']+columns_phase_1['summry']+columns_phase_1['host_info']+columns_phase_1['location']+columns_phase_1['prdct']+columns_phase_1['guest_info']+columns_phase_1['rvws']
 listings = pd.read_csv(int_data, index_col=0, parse_dates=listings_columns_with_dates, usecols=usecols) #
@@ -129,4 +148,4 @@ data.rename(columns={'city_y':'district', 'id':'listing_id'}, inplace=True)
 
 ## SAVE
 data.to_csv('../data/processed/data.csv')
-print('pre-processing completed! New dataset size:',data.shape)
+print('Pre-processing completed! File created: ../data/processed/data.csv\nNew dataset size:',data.shape)

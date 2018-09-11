@@ -6,6 +6,12 @@ used in pre_processing.py file and the pre_processing notebook
 import numpy as np
 import pandas as pd
 import re
+import requests
+import gzip
+import shutil
+import os
+from os import walk
+
 
 # Used only in notebook
 import pandas_profiling
@@ -26,6 +32,61 @@ sns.set(style="darkgrid", color_codes=True)
 plt.rcParams.update(plt_update)
 
 '''------------------PRE-PROCESSING FUNCTIONS----------------'''
+
+'''Downloads and unzips the csv files '''
+
+def confirm_files(project_name, url):
+
+# Local Variables
+    gzip_filename = url.split("/")[-1]
+    filename = gzip_filename[:-3]
+
+    # Confirm path is in the main folder:
+    path = os.getcwd()
+    if project_name in path:
+        print('Path Confirmed')
+        new_path = path[:path.index(project_name)+len(project_name)+1]
+        os.chdir(new_path)
+    else:
+        print('Change directory to the Project-Data-Mining')
+        print(os.getcwd())
+        print("RUN: os.chdir('/Users/iZbra1/Documents/Jupyter-DS/K2DS/Projects/Project-Data-Mining/notebook')")
+
+    # Check if the data folder is already created
+    f = []
+    for (dirpath, dirnames, filenames) in walk(os.getcwd()):
+        f.extend(filenames)
+        break
+
+    if 'data' not in dirnames:
+        os.makedirs('data/raw')
+        os.makedirs('data/processed')
+
+    # Check if the csv files are there:
+    os.chdir('data/raw')
+    f = []
+    for (dirpath, dirnames, filenames) in walk(os.getcwd()):
+        f.extend(filenames)
+        break
+
+    if filename not in filenames:
+        # Download
+        if gzip_filename not in filenames:
+            print('Downloading',gzip_filename)
+            with open(gzip_filename, "wb") as f:
+                r = requests.get(url)
+                f.write(r.content)
+        # Unzip
+        print('Unziping', gzip_filename)
+        with gzip.open(gzip_filename, 'rb') as f_in:
+            with open(filename, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        # Delete Zip file
+        os.remove(gzip_filename)
+
+    print(filename, 'is downloaded')
+
+
 
 '''Takes a zipcode and returns the most common city assigned to the zipcode'''
 def get_com_den_city(z, zip_data):
