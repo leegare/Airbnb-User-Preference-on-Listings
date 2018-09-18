@@ -11,7 +11,8 @@ import gzip
 import shutil
 import os
 from os import walk
-
+from bs4 import BeautifulSoup
+from IPython.display import clear_output
 
 # Used only in notebook
 import pandas_profiling
@@ -60,7 +61,9 @@ def confirm_files(project_name, url):
 
     if 'data' not in dirnames:
         os.makedirs('data/raw')
+        os.makedirs('data/interim')
         os.makedirs('data/processed')
+
 
     # Check if the csv files are there:
     os.chdir('data/raw')
@@ -71,6 +74,7 @@ def confirm_files(project_name, url):
 
     if filename not in filenames:
         # Download
+        print(filename, 'not found. This are the only files found: ', filenames)
         if gzip_filename not in filenames:
             print('Downloading',gzip_filename)
             with open(gzip_filename, "wb") as f:
@@ -146,6 +150,40 @@ def clean_zip(z1):
         print(type(z1),'is a loophole, or a:', z1)
         return 1
 
+'''get_paris_attractions_coordinates
+    scrapes the data from the website https://latitude.to
+    retrieves the latitude and longitude of most tourist attractions
+    in Ile-de-France
+'''
+def get_paris_attractions_coordinates():
+
+    urls = ['https://latitude.to/map/fr/france/cities/paris/articles/page/'+str(n_page)+'#articles-of-interest' for n_page in range(2,85)]
+    url_list = ['https://latitude.to/map/fr/france/cities/paris']+urls
+    paris_attractions = pd.DataFrame(columns=['Name','latitude','longitude'])
+
+
+    for n_page in range(len(url_list)):
+
+        my_page = requests.get(url_list[n_page])
+        if my_page.status_code != 200:
+            print('Error scraping',url)
+            pass
+        clear_output()
+        print('Fetching coordinates ..', int((n_page+1)/len(url_list)*100),'%')
+
+        soup = BeautifulSoup(my_page.content, 'html.parser')
+
+        attr_name = soup.select("h3.title a")
+        attr_coord = soup.select("div.act a.show")
+
+        paris_attr = [[attr_name[a].get_text().lower(),
+                   float(attr_coord[a].get('data-lat')),
+                   float(attr_coord[a].get('data-lng'))] for a in range(len(attr_name))]
+        p_attr = pd.DataFrame(paris_attr, columns=['Name','latitude','longitude'])
+
+        paris_attractions = pd.concat([paris_attractions, p_attr])
+
+    return paris_attractions
 
 '''------------------PRE-PROCESSING VARIABLES----------------'''
 

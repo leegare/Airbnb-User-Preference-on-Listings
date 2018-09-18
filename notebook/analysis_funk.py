@@ -62,7 +62,8 @@ l_size - size of listings if False then it plots listings per the 4th column
 l_color - color of listings if False then it plots listings colored per zipcode
 l_alpha - alpha value of listings.
 '''
-def print_map(coord, res = 'c', arrn_lim = 1, title_map='Paris', l_size=100, l_color = 'blue', l_alf=0.4):
+
+def print_map(coord, res='c', arrn_lim=1, title_map='Paris', l_size=10, l_color='blue', l_alf=0.4):
 
     fig, ax = plt.subplots(figsize=(25,10)) #12.5,5)) # 25/10
 
@@ -70,19 +71,19 @@ def print_map(coord, res = 'c', arrn_lim = 1, title_map='Paris', l_size=100, l_c
                 resolution=res,
                 llcrnrlon=2.25, llcrnrlat=48.813500,
                 urcrnrlon=2.421, urcrnrlat=48.906000)
-    m.drawrivers(color='blue', linewidth=2)
+    m.drawrivers(color='lightblue', linewidth=2)
 
     # Insert Paris background image
     img = mpimg.imread('../images/Paris_map.jpg')
     im = m.imshow(img, extent=(2.25,2.45,48.797622,48.925604), alpha=0.4, zorder=1, origin='upper')
 
-    # Arrondissements
-    plat, plon, plabel, colors_per_zip_limit, cpzl = get_arrondissement_info()
+    # Arrondissements limits
     if arrn_lim:
+        plat, plon, plabel, colors_per_zip_limit = get_arrondissement_info()
         arr_xpt, arr_ypt = m(plon, plat)
         m.scatter(arr_xpt, arr_ypt, s=100, c=colors_per_zip_limit, zorder=3, marker='X')
 
-        # Insert Listings
+    # Insert Listings
 
     if not l_size:
         breakpoints = [100, 200, 1000, 10000]

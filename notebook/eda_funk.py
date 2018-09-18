@@ -19,6 +19,7 @@ Variable to assign the price into broader intervals.
 import numpy as np
 import pandas as pd
 from bisect import bisect
+import re
 
 # Used only in notebook
 import pandas_profiling
@@ -60,6 +61,8 @@ def get_interval(total):
     return breakpoints[bisect(breakpoints, total)-1]
 
 
+
+
 '''Loads the reviews.csv file from the Airbnb site and counts the number of
     reviews per month per listing and returns the average number of
     reviews per month per listing in form of a dataframe.
@@ -80,7 +83,7 @@ def get_reviews_per_month():
 breakpoints = [20, 40, 60, 80, 100, 120, 160, 200, 300, 500, 800, 1000, 5000, 10000]
 
 '''Current necessary columns'''
-host_col = ['listing_id','host_id', 'host_since',
+host_col = ['id','host_id', 'host_since',
        'host_response_time', 'host_neighbourhood', 'host_listings_count',
        'host_verifications', 'host_is_superhost']
 loc_col = ['city', 'zipcode',
@@ -97,19 +100,29 @@ rvw_col = ['number_of_reviews', 'first_review', 'last_review',
        'review_scores_value', 'reviews_per_month']
 
 '''Data prior to EDA'''
-int_data = '../data/processed/data.csv'
+int_data = '../data/interim/data.csv'
 usecols = host_col+loc_col+prop_col+guest_col+rvw_col
-mybar_data = pd.read_csv(int_data, index_col=1, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
+mybar_data = pd.read_csv(int_data, index_col=0, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
 
 int_data = '../data/raw/paris_reviews.csv'
 reviews_data = pd.read_csv(int_data, parse_dates=['date'], usecols=['listing_id','date','id'])
 
+specific_outliers = ['french first republic','storming of the bastille', 'liberation of paris',
+                    'alfred dreyfus','dalida','hundred days offensive', 'louis braille',
+                     'socialist party (france)', 'tf1','star academy (french tv series)',
+                    'italie 13','italie 2', 'topography of paris', 'ramón emeterio betances',
+                    'dpsd', 'diptyque', 'le train bleu (restaurant)', 'ménilmontant','bagnolet',
+                    'belleville, paris','bercy','direction de la surveillance du territoire',
+                    'directorate-general for external security','international council of museums',
+                    'jacques pierre brissot','la fondation pour la mémoire de la déportation',
+                    'schola cantorum de paris','val de seine']
+
 #---------------------- EDA FUNCTIONS -----------------------
 
 '''
-get_amenity_tools takes a dataframe with listings as index
-and a column of a list of its amenities
-the amenities per listing and returns:
+get_amenity_tools takes a dataframe
+the amenities per listing (with listings_id as index
+and a column of a list of its amenities) and returns:
 
 - my_data, a dataframe holding the amenities for each listing in its original
 form (between keys:{}) and in form of a list
