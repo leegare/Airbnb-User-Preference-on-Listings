@@ -7,6 +7,7 @@ notebook_path = '../../notebook'
 url_paris_listings_data = 'http://data.insideairbnb.com/france/ile-de-france/paris/2018-08-13/data/listings.csv.gz'
 url_paris_reviews_data = 'http://data.insideairbnb.com/france/ile-de-france/paris/2018-08-13/data/reviews.csv.gz'
 name_of_main_folder = 'Project-Data-Mining'
+
 project_path = '/Users/iZbra1/Documents/Jupyter-DS/K2DS/Projects/Project-Data-Mining/notebook'
 
 # Download the listings
@@ -42,14 +43,14 @@ lwn_host_is_superhost = listings.loc[listings.host_is_superhost.isnull()].index.
 # LOCATION :
 # Uniform to zipcode standard format (5 digits)
 listings['zipcode'] = listings.zipcode.apply(clean_zip)
-outliers_and_wrong_zipcodes = [30140, 40230, 61340, 70001, 70009, 74400, 76016, 76016, 75000]
+outlier_zipcodes = listings.loc[(listings.zipcode<=75000)|(listings.zipcode>76000),'zipcode'].unique()
 
 # Merge 75106, 75116 to 75006 and 75016 respectively
 listings.loc[listings.zipcode==75106, 'zipcode'] = 75006
 listings.loc[listings.zipcode==75116, 'zipcode'] = 75016
 
 # Add to the black list those zipcodes that are null or have a value of 1
-lwn_num_zip = listings.loc[(listings.zipcode==0)|(listings.zipcode==1)|(listings.zipcode.isin(outliers_and_wrong_zipcodes))].index.values
+lwn_num_zip = listings.loc[(listings.zipcode==0)|(listings.zipcode==1)|(listings.zipcode.isin(outlier_zipcodes))].index.values
 
 # Listings where location is not exact
 lwn_loc_exact = listings.loc[listings.is_location_exact=='f'].index.values
@@ -125,14 +126,8 @@ zip_paris.drop('index', axis=1, inplace=True)
 # Manually fix the outlier (zipcode=75106)
 zip_paris.loc[zip_paris.zipcode==75106, 'city'] = 'paris-16e-arrondissement'
 
-# Get the common city for each zipcodes in the Suburbs
-zip_banlieu = pd.Series(data.zipcode.unique()[data.zipcode.unique()>75999]).reset_index()
-zip_banlieu.rename(columns={0:'zipcode'}, inplace=True)
-zip_banlieu['city'] = zip_banlieu.zipcode.apply(lambda x: get_com_den_city(x, zip_data))
-zip_banlieu.drop('index', axis=1, inplace=True)
-
-# Join zip_paris with zip_banlieu along rows
-zip_france = pd.concat([zip_paris, zip_banlieu]).set_index('zipcode')
+zip_paris.set_index('zipcode', inplace=True)
+zip_paris.head()
 
 # Apply research on THE data dataframe
 # Prep dataframe to be merged
@@ -140,12 +135,48 @@ data.drop('city',axis=1, inplace=True)
 data.reset_index(inplace=True)
 data.set_index('zipcode', inplace=True)
 # Merge
-data = pd.merge(data, zip_france, right_index=True, left_index=True)
+data = pd.merge(data, zip_paris, right_index=True, left_index=True)
 # Prep dataframe post-merge
 data.reset_index(inplace=True)
-
+data.set_index('id', inplace=True)
 data.rename(columns={'city_y':'district', 'id':'listing_id'}, inplace=True)
 
+
+# Correct incorrect zipcoded listings by assigning the geographically nearest zipcode center.
+
+centroids, outliers = get_centroids_and_outliers(data)
+
+# Function that returns the zipcode having the minimum euclidean
+# distance with a particular listing x. Uses local variable centroids
+
+def get_distEuclid(x):
+    d = np.sqrt((centroids.longitude - x.longitude)**2 + (centroids.latitude - x.latitude)**2)
+    return d.idxmin()
+
+
+# For every outlier perform k nearest centroids (k=1).
+# In the centroids set, we compute the distance to every outlier listing and the
+# function get_distEuclid will return with the zipcode whose centroid is the nearest.
+
+outliers['zipcode'] = outliers.apply(lambda x: get_distEuclid(x), axis=1).astype(int)
+# Update the color of the listing to its corresponding zipcode
+outliers['color'] = outliers.zipcode.apply(lambda x: cpzl[x])
+
+# Add corrected outliers into database
+
+data = pd.merge(data, outliers.loc[:,['zipcode']], right_index=True, left_index=True, how='outer')
+# Get the index of those listings whose zipcode_y is not null.
+new_zip = data.loc[data.zipcode_y.notnull()].index.values
+data.loc[new_zip,'zipcode_x'] = data.loc[new_zip,'zipcode_y']
+data['zipcode'] = data.zipcode_x.astype(int)
+data.drop(['zipcode_x','zipcode_y'], axis=1, inplace=True)
+
+
+
+# Get the tourist attractions coordinates
+paris_attractions = get_paris_attractions_coordinates()
+
 ## SAVE
-data.to_csv('../data/processed/data.csv')
-print('Pre-processing completed! File created: ../data/processed/data.csv\nNew dataset size:',data.shape)
+data.to_csv('../data/interim/data.csv')
+paris_attractions.to_csv('../data/interim/paris_attractions.csv')
+print('Pre-processing completed! File created: ../data/interim/data.csv\nNew dataset size:',data.shape)

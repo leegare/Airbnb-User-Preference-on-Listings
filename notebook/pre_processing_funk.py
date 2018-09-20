@@ -14,6 +14,8 @@ from os import walk
 from bs4 import BeautifulSoup
 from IPython.display import clear_output
 
+from clust_funk import *
+
 # Used only in notebook
 import pandas_profiling
 import missingno as msn
@@ -32,7 +34,10 @@ plt_update = {'font.size':16,
 sns.set(style="darkgrid", color_codes=True)
 plt.rcParams.update(plt_update)
 
-'''------------------PRE-PROCESSING FUNCTIONS----------------'''
+
+''' #######################################################
+             PRE-PROCESSING FUNCTIONS
+####################################################### '''
 
 '''Downloads and unzips the csv files '''
 
@@ -91,7 +96,6 @@ def confirm_files(project_name, url):
     print(filename, 'is downloaded')
 
 
-
 '''Takes a zipcode and returns the most common city assigned to the zipcode'''
 def get_com_den_city(z, zip_data):
     if isinstance(zip_data.loc[z,'city'], str):
@@ -112,6 +116,7 @@ def sum_desc_comp(s1, s2):
     else:
         return 0
 
+
 '''USED IN NOTEBOOK ONLY
 Quantify host_response_time
     Function that receives a string of either:
@@ -120,6 +125,7 @@ Quantify host_response_time
     ...
     and so and converts (grades) it into a number.
 '''
+
 def quantify_host_response_time(T):
     if (T == 'within an hour'):
         return 5
@@ -130,11 +136,13 @@ def quantify_host_response_time(T):
     else:
         return 20
 
+
 '''Selecting numeric-only string zipcodes:
     Function that takes in a string (or a float)
     strips it out of non-numerical characters
     and returns it as an int of 5 digits
 '''
+
 def clean_zip(z1):
     zip_code_pattern = '\d{5}'
     uneccesary_chars = '[\r\n]?[\s-]?[aA-zZ]?'
@@ -150,17 +158,18 @@ def clean_zip(z1):
         print(type(z1),'is a loophole, or a:', z1)
         return 1
 
+
 '''get_paris_attractions_coordinates
     scrapes the data from the website https://latitude.to
     retrieves the latitude and longitude of most tourist attractions
     in Ile-de-France
 '''
+
 def get_paris_attractions_coordinates():
 
     urls = ['https://latitude.to/map/fr/france/cities/paris/articles/page/'+str(n_page)+'#articles-of-interest' for n_page in range(2,85)]
     url_list = ['https://latitude.to/map/fr/france/cities/paris']+urls
     paris_attractions = pd.DataFrame(columns=['Name','latitude','longitude'])
-
 
     for n_page in range(len(url_list)):
 
@@ -185,7 +194,11 @@ def get_paris_attractions_coordinates():
 
     return paris_attractions
 
-'''------------------PRE-PROCESSING VARIABLES----------------'''
+
+
+''' #######################################################
+             PRE-PROCESSING VARIABLES
+####################################################### '''
 
 '''Columns after dataset's 2nd filter'''
 columns_phase_2 = {
@@ -233,93 +246,25 @@ columns_phase_2 = {
 
 
 '''Columns after dataset's 1st observation'''
+
 columns_phase_1 = {
 'headr':['last_scraped'],
-'summry':['name',
- 'summary',
- 'space',
- 'description',
- 'neighborhood_overview',
- 'notes',
- 'transit',
- 'access',
- 'interaction',
- 'house_rules'],
-'host_info':['host_id',
- 'host_since',
- 'host_location',
- 'host_name',
- 'host_about',
- 'host_response_time',
- 'host_response_rate',
- 'host_neighbourhood',
- 'host_listings_count',
- 'host_verifications', 'host_is_superhost'],
-'location':['city',
- 'zipcode',
- 'smart_location',
- 'latitude',
- 'longitude',
- 'is_location_exact'], # To remove later
-'prdct':['property_type',
- 'room_type',
- 'accommodates',
- 'bathrooms',
- 'beds',
- 'bed_type',
- 'amenities',
- 'price', 'weekly_price', 'monthly_price',
- 'guests_included',
- 'extra_people',
- 'minimum_nights',
- 'maximum_nights',
- 'availability_30',
- 'availability_60',
- 'availability_90',
- 'availability_365',
- 'instant_bookable',
- 'cancellation_policy'],
+'summry':['name','summary','space','description','neighborhood_overview','notes','transit','access','interaction','house_rules'],
+'host_info':['host_id','host_since','host_location','host_name','host_about','host_response_time','host_response_rate','host_neighbourhood','host_listings_count','host_verifications', 'host_is_superhost'],
+'location':['city','zipcode','smart_location','latitude','longitude','is_location_exact'], # To remove later
+'prdct':['property_type','room_type','accommodates','bathrooms','beds','bed_type','amenities','price', 'weekly_price', 'monthly_price','guests_included','extra_people','minimum_nights','maximum_nights','availability_30','availability_60','availability_90','availability_365','instant_bookable','cancellation_policy'],
 'guest_info':['require_guest_profile_picture', 'require_guest_phone_verification'],
-'rvws':['number_of_reviews',
- 'first_review',
- 'last_review',
- 'review_scores_rating',
- 'review_scores_accuracy',
- 'review_scores_cleanliness',
- 'review_scores_checkin',
- 'review_scores_communication',
- 'review_scores_location',
- 'review_scores_value',
- 'reviews_per_month']}
+'rvws':['number_of_reviews','first_review','last_review','review_scores_rating','review_scores_accuracy','review_scores_cleanliness','review_scores_checkin','review_scores_communication','review_scores_location','review_scores_value','reviews_per_month']}
 
 '''Original columns'''
+
 columns_phase_0 = {
 'headr':['listing_url', 'scrape_id', 'last_scraped'],
-'summry':['name', 'summary',
-       'space', 'description', 'experiences_offered', 'neighborhood_overview',
-       'notes', 'transit', 'access', 'interaction', 'house_rules',
-       'thumbnail_url', 'medium_url', 'picture_url', 'xl_picture_url'],
-'host_info':['host_id', 'host_url', 'host_name', 'host_since', 'host_location',
-       'host_about', 'host_response_time', 'host_response_rate',
-       'host_acceptance_rate', 'host_is_superhost', 'host_thumbnail_url',
-       'host_picture_url', 'host_neighbourhood', 'host_listings_count',
-       'host_total_listings_count', 'host_verifications',
-       'host_has_profile_pic', 'host_identity_verified'],
-'location':['street','neighbourhood', 'neighbourhood_cleansed',
-       'neighbourhood_group_cleansed', 'city', 'state', 'zipcode', 'market',
-       'smart_location', 'country_code', 'country', 'latitude', 'longitude',
-       'is_location_exact'],
-'prdct':['property_type', 'room_type', 'accommodates',
-       'bathrooms', 'bedrooms', 'beds', 'bed_type', 'amenities', 'square_feet',
-       'price', 'weekly_price', 'monthly_price', 'security_deposit',
-       'cleaning_fee', 'guests_included', 'extra_people', 'minimum_nights',
-       'maximum_nights', 'calendar_updated', 'has_availability',
-       'availability_30', 'availability_60', 'availability_90',
-       'availability_365','instant_bookable','cancellation_policy', 'requires_license',
-       'license', 'jurisdiction_names','is_business_travel_ready'],
+'summry':['name', 'summary','space', 'description', 'experiences_offered', 'neighborhood_overview','notes', 'transit', 'access', 'interaction', 'house_rules','thumbnail_url', 'medium_url', 'picture_url', 'xl_picture_url'],
+'host_info':['host_id', 'host_url', 'host_name', 'host_since', 'host_location','host_about', 'host_response_time', 'host_response_rate','host_acceptance_rate', 'host_is_superhost', 'host_thumbnail_url','host_picture_url', 'host_neighbourhood', 'host_listings_count','host_total_listings_count', 'host_verifications','host_has_profile_pic', 'host_identity_verified'],
+'location':['street','neighbourhood', 'neighbourhood_cleansed','neighbourhood_group_cleansed', 'city', 'state', 'zipcode', 'market','smart_location', 'country_code', 'country', 'latitude', 'longitude','is_location_exact'],
+'prdct':['property_type', 'room_type', 'accommodates','bathrooms', 'bedrooms', 'beds', 'bed_type', 'amenities', 'square_feet','price', 'weekly_price', 'monthly_price', 'security_deposit','cleaning_fee', 'guests_included', 'extra_people', 'minimum_nights','maximum_nights', 'calendar_updated',
+    'has_availability','availability_30', 'availability_60', 'availability_90','availability_365','instant_bookable','cancellation_policy', 'requires_license','license', 'jurisdiction_names','is_business_travel_ready'],
 'guest_info':['require_guest_profile_picture', 'require_guest_phone_verification'],
-'rvws':['calendar_last_scraped', 'number_of_reviews',
-       'first_review', 'last_review', 'review_scores_rating',
-       'review_scores_accuracy', 'review_scores_cleanliness',
-       'review_scores_checkin', 'review_scores_communication',
-       'review_scores_location', 'review_scores_value', 'reviews_per_month']}
+'rvws':['calendar_last_scraped', 'number_of_reviews','first_review', 'last_review', 'review_scores_rating','review_scores_accuracy', 'review_scores_cleanliness','review_scores_checkin', 'review_scores_communication','review_scores_location',
+    'review_scores_value', 'reviews_per_month']}

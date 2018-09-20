@@ -119,6 +119,39 @@ def print_summary(l,idx,s_col):
     print(l.loc[idx,'interaction'],'\n')
     print(l.loc[idx,s_col])
 
+def print_paris(centr, abrnt, res, title_map, l_size, l_alf, im_alf):
+    centroid = centr
+    c_color = centroid.color.values
+    l_color = abrnt.color.values
+
+    fig, ax = plt.subplots(figsize=(25,10)) #12.5,5)) # 25/10
+
+    m = Basemap(projection='cyl',
+                resolution=res,
+                llcrnrlon=2.25, llcrnrlat=48.813500,
+                urcrnrlon=2.421, urcrnrlat=48.906000)
+    m.drawrivers(color='lightblue', linewidth=2)
+
+    # Insert Paris background image
+    img = mpimg.imread('../images/Paris_map.jpg')
+    im = m.imshow(img, extent=(2.25,2.45,48.797622,48.925604), alpha=im_alf, zorder=1, origin='upper')
+
+    if l_size is False:
+        l_size = 200
+
+    # Plot Centroids
+    cis_xpt, cis_ypt = m(centroid.longitude.values, centroid.latitude.values)
+    m.scatter(cis_xpt, cis_ypt, s=l_size, c=c_color, zorder=2, marker='X')
+
+    # Plot outliers.
+    outx, outy = m(abrnt.longitude.values, abrnt.latitude.values)
+    m.scatter(outx, outy, s=50, c=l_color, zorder=3, marker='D', alpha=0.7)
+
+    plt.title(title_map)
+    plt.show()
+
+    fig.savefig('../images/'+title_map+'.png', bbox_inches='tight')
+
 #----------------------------- VARS---------------------
 
 cpzl = {

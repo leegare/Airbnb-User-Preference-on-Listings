@@ -17,13 +17,110 @@ from sklearn.cluster import KMeans
 from scipy.spatial.distance import pdist, cdist, squareform
 from sklearn.cluster import DBSCAN
 
+# LIBS for lof
+from sklearn.neighbors import LocalOutlierFactor
+
+# LIBS for dealing with outliers.
+import pandas as pd
+
+
+'''################################################################
+                     LOCAL VARIABLES
+################################################################'''
+
+usecols = ['listing_id','host_id', 'host_since', 'host_response_time','host_is_superhost',
+       'zipcode', 'latitude', 'longitude',
+       'property_type', 'room_type', 'accommodates','bathrooms', 'bed_type',
+       'amenities', 'amty_per','price',
+       'guests_included', 'minimum_nights','availability_365',
+       'first_review', 'last_review', 'review_scores_rating','review_scores_accuracy',
+       'review_scores_cleanliness','review_scores_checkin', 'review_scores_communication',
+       'review_scores_location', 'review_scores_value', 'number_of_reviews',
+       'reviews_per_month']
+
+int_data = '../data/processed/data.csv'
+data = pd.read_csv(int_data, index_col=0, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
+
+cpzl = {
+75001:'yellow',75002:'blue',75003:'dimgray',75004:'darkslateblue',75005:'olive',
+75006:'green',75007:'cyan',75008:'lime',75009:'purple',75010:'maroon',
+75011:'cyan',75012:'gold',75013:'red',75014:'purple',75015:'royalblue',
+75016:'orange',75017:'magenta',75018:'teal',75019:'navy',75020:'violet',
+92100:'black', 92110:'black', 92120:'black', 92130:'black', 92150:'black',
+92170:'black', 92200:'black', 92240:'black', 92300:'black', 92310:'black',
+92600:'black', 93100:'black', 93170:'black', 93260:'black', 93300:'black',
+93310:'black', 93400:'black', 93500:'black', 94120:'black', 94130:'black',
+94160:'black', 94200:'black', 94220:'black', 94250:'black', 94270:'black',
+94300:'black', 94410:'black', 94700:'black', 94800:'black', 95170:'black'
+}
+
+
+'''################################################################
+                     FUNCTIONS
+################################################################'''
+
+'''Function that get's the center of mass for every district
+    It will receive X which is a set of coordinates and it
+    performs kmeans algorithm to determine its centroid
+'''
+
+def get_centroids(X,k):
+    np.random.seed(k)
+    kmeans = KMeans(n_clusters=k)
+    kmeans.fit(X)
+    labels = kmeans.labels_
+    centroids = kmeans.cluster_centers_
+    return centroids
+
+
+'''Function that returns potential outilers of listings
+per zipcode using the lof method and also returns the centroids of
+every zipcode. Uses local variable cpzl'''
+
+def get_centroids_and_outliers(data):
+
+    outliers = {}
+    centroids = {}
+    number_of_centroids = 1
+    k = 25
+
+    for arrondissement in data.zipcode.unique():
+
+        df = data.loc[data.zipcode==arrondissement,['longitude','latitude']]
+        oust, inli = get_lof(df, k, False)
+        outliers[arrondissement] = oust.index.values
+        centroids[arrondissement] = get_centroids(df.values, number_of_centroids)
+
+    # Set centroids in dataframe
+    centr = pd.DataFrame(list(centroids.items()), columns=['zipcode','coordinates'])
+    # Break the coordinates into longi and lati
+    centr['longitude'] = centr.coordinates.apply(lambda x: x[0][0])
+    centr['latitude'] = centr.coordinates.apply(lambda x: x[0][1])
+    centr['color'] = centr.zipcode.apply(lambda x: cpzl[x])
+    centr.set_index('zipcode', inplace=True)
+    #centr.drop('coordinates', axis=1, inplace=True)
+
+    # Set outliers in dataframe
+    abrnt = pd.concat({k: pd.DataFrame(v) for k, v in outliers.items()})
+    abrnt.reset_index(inplace=True)
+    abrnt.set_index(0, inplace=True)
+    abrnt.drop('level_1',axis=1, inplace=True)
+    abrnt.index.name = 'listing_id'
+    abrnt.rename(columns={'level_0': 'fake_zipcode'}, inplace=True)
+    # Add color
+    abrnt['color'] = abrnt.fake_zipcode.apply(lambda x: cpzl[x])
+    # Add latitude and longitude
+    abrnt = pd.merge(abrnt, data.loc[:,['latitude','longitude']], right_index=True, left_index=True)
+
+    return centr, abrnt
+
 '''Cluster analysis functions
 Does DBSCAN, Covariance ellipses, GMM and Dirichlet MM and LOF
 '''
 
 # FUNCTION THAT USES THE ELLIPTICAL ENVELOPE
 
-def get_elliptic_envelope(arrondissement, data):
+def get_elliptic_envelope(X1):
 
 # Define "classifiers" to be used
     classifiers = {
@@ -31,10 +128,6 @@ def get_elliptic_envelope(arrondissement, data):
         "Empirical Covariance": EllipticEnvelope(support_fraction=1., contamination=0.261),
         "Robust Covariance (Minimum Covariance Determinant)": EllipticEnvelope(contamination=0.261),
         }
-
-    # Get data
-
-    X1 = data.loc[(data.zipcode.isin(arrondissement)),['longitude','latitude']].values
 
     # list color codes for plotting
     colors = ['firebrick','gold','mediumorchid']
@@ -77,8 +170,8 @@ def get_elliptic_envelope(arrondissement, data):
     plt.ylim((yy1.min(), yy1.max()))
 
     # set labels
-    plt.ylabel("Three Point Percentage")
-    plt.xlabel("Points per Game")
+    plt.ylabel("Latitude")
+    plt.xlabel("Longitude")
 
     # create legend
     #plt.legend((legend1_values_list[0].collections[0],
@@ -128,10 +221,9 @@ def plot_results(X, Y_, means, covariances, index, title, color_iter):
 
     # GET GMM
 
-def get_gmm(arrondissement, data, n_components = 1):
+def get_gmm(X, n_components = 1):
     # iterator to cycle over colors while plotting
     color_iter = itertools.cycle(['c', 'cornflowerblue', 'gold', 'orange', 'olive'])
-    X = data.loc[data.zipcode==arrondissement,['longitude','latitude']].values
 
     # Fit a Gaussian mixture with EM using eight components
     # fit mixture model to X, to estimate Y_ and stats (i.e. mean, covar)
@@ -139,48 +231,54 @@ def get_gmm(arrondissement, data, n_components = 1):
     w = plot_results(X, gmm.predict(X), gmm.means_, gmm.covariances_, 0,'Gaussian Mixture', color_iter)
 
     # FUNCTION FOR LOF
-def get_lof(df, X, k):
+def get_lof(df, k, display):
 # fit the model
     lof = LocalOutlierFactor(n_neighbors=k)
+    X = df.as_matrix()
     lof.fit(X)
 
     outlier_scores = lof.negative_outlier_factor_
+    outlier_idx = [idx for idx, score in enumerate(outlier_scores) if score < -2]
 
-    points = []
-    threes = []
-    # loop, store and print players who are outliers
-    for idx, score in enumerate(outlier_scores):
-        if score < -2:
-            listing = df.iloc[idx, :]
+    outliers = df.iloc[outlier_idx]
+    inliers = df.iloc[~df.index.isin(outliers.index.values)]
 
-            points.append(listing['longitude'])
-            threes.append(listing['latitude'])
+    if display:
+        # plot the data observations
+        plt.plot(inliers['longitude'], inliers['latitude'], 'ob', alpha=0.2)
 
-    #        print(listing['Name'], listing['PPG'], listing['3P%'])
+        # plot the outliers
+        lines = plt.plot(outliers['longitude'], outliers['latitude'], 'Xr')
 
-    #Plot inliers as blue circles, and outliers as large X's
+        plt.title("Outliers using LOF")
+        plt.ylabel("latitude")
+        plt.xlabel("longitude")
+        plt.show()
 
-    # plot the data observations
-    plt.plot(df['longitude'], df['latitude'], 'o', alpha=0.2)
-
-    # plot the outliers
-    lines = plt.plot(points, threes, 'kx')
-
-    # make the centroid x's bigger
-    plt.setp(lines, ms=10.0)
-    plt.setp(lines, mew=1.0)
-
-    plt.title("Outliers using LOF")
-    plt.ylabel("latitude")
-    plt.xlabel("longitude")
-    #plt.ylim(ymax = 115, ymin = -10)
-    #plt.xlim(xmax = 35, xmin = -5)
-    plt.show()
+    return outliers, inliers
 
 # FUNCTION KMeans
-def get_kmeans(data, arrondissement, k, threshold):
-    np.random.seed(arrondissement)
-    X = data.loc[data.zipcode.isin(arrondissement),['longitude','latitude']].values
+
+def get_optimal_k(testKmeanXZ):
+    second_derivative = []
+    second_derivative = [abs(testKmeanXZ[elem]-testKmeanXZ[elem+1]) for elem in range(len(testKmeanXZ)-1)]
+    return second_derivative.index(max(second_derivative))+2
+
+def test_kmeans(data, nClusterRange, display):
+    inertias = np.zeros(len(nClusterRange))
+    for i in range(len(nClusterRange)):
+        model = KMeans(n_clusters=i+1, init='k-means++').fit(data)
+        inertias[i] = model.inertia_
+    if display:
+        figInertiaWithKNonConvex = plt.figure(figsize=(10,3))
+        plt.plot(kRange, testKmeanXZ, 'o-', color='royalblue', linewidth=3)
+        plt.plot([k], [testKmeanXZ[k-1]], 'o--', color='gold', linewidth=3)
+        plt.show()
+
+    return inertias
+
+def get_kmeans(X, k, threshold):
+    np.random.seed(k)
 
     kmeans = KMeans(n_clusters=k)
     kmeans.fit(X)
@@ -240,28 +338,10 @@ def get_kmeans(data, arrondissement, k, threshold):
     plt.ylabel("Latitude")
     plt.xlabel("Longitude")
     plt.show()
+    return centroids
 
 
 # DBSCAN SUBFUNCTIONS
-def get_density(pairDistList):
-    figPairwiseDistances = plt.figure(figsize=(15,3))
-
-    n, b, patches = plt.hist(pairDistList, bins=100, color='royalblue')
-    bin_max = np.where(n == n.max())
-
-    # Plot the maximum value of the histogram
-    plt.axvline(x=b[bin_max][0], linestyle='--', color='gold', linewidth=4)
-
-    # Anotation
-    plt.text(b[bin_max][0]*2,n[bin_max][0]*0.7,r'~Cluster Scale:'+str(b[bin_max][0]), size=13)
-
-    plt.xlabel('Pairwise Distance')
-    plt.ylabel('# of data points')
-    plt.title('Dataset Separation Distribution')
-    plt.show()
-    return b[bin_max][0]
-    #figPairwiseDistances.savefig('./img/k2c-dbscan-pdist-epsilon.png')
-
 def neighborhoods(data, epsilon):
     n_data = data.shape[0]
     nn = np.zeros(n_data)
@@ -276,23 +356,6 @@ def neighborhoods(data, epsilon):
         nn[pair[1]] += 1
     return nn
 
-def get_edge_points(nn, epsilon):
-    figNeighborhoods = plt.figure(figsize=(15,4))
-
-    #plt.hist(nn, bins=45, color='darkorange')
-    n, b, patches = plt.hist(nn, bins=np.arange(min(nn), max(nn) + 1, 1), color='royalblue')
-    bin_max = np.where(n == n.max())
-
-    plt.axvline(x=b[bin_max][0], linestyle='--', color='gold', linewidth=4)
-    plt.text(b[bin_max][0], n[bin_max][0]*0.7, 'maxPts='+str(b[bin_max][0]), size=16, color='dimgray')
-
-    plt.xlabel('# of neighbors', size=14)
-    plt.ylabel('# of data points', size=14)
-    plt.title('Dataset Density Distribution (Eps. = '+str(epsilon)+')', size=14)
-    plt.show()
-    return b[bin_max][0]
-#figNeighborhoods.savefig('./img/k2c-dbscan-neighborhoods.png')
-
 # Build a dictionary of clusters and their points
 def buildClusterDict(model):
     npts = model.labels_.shape[0]
@@ -305,52 +368,9 @@ def buildClusterDict(model):
             clusterDict[lbl] = [i]
     return clusterDict
 
-def dbscanit(matXY, epsilon, max_pts):
-    # DBSCAN
-    dbmodel = DBSCAN(eps=epsilon, min_samples=max_pts).fit(matXY)
-    labels = dbmodel.labels_
-    #print(set(labels))
 
-    # Number of clusters in labels, ignoring noise if present.
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    #print(n_clusters_)
+def get_district_cluster(matXY, epsilon=False, max_pts=False):
 
-    # ClusterDict has the point name (or index) as value and it's label as key.
-    clusterDict = buildClusterDict(dbmodel)
-
-    # Noise
-    #clusterDict[-1]
-
-    # Cluster Statistics verbose report
-    #for lbl in clusterDict:
-    #    if lbl == -1:
-    #        print("Model identified {0} data points as noise".format(len(clusterDict[lbl])))
-    #    else:
-    #        print("Cluster {0} has {1} members".format(lbl, len(clusterDict[lbl])))
-
-    # Number of Core samples
-    #print(dbmodel.core_sample_indices_.shape)
-    # noise data point mask
-    noise_sample_mask = np.zeros(n_data, dtype=bool)
-    noise_sample_mask[clusterDict[-1]] = True
-
-    # Representation in 2D
-    figDBSCAN2D = plt.figure(figsize=(10,5))
-
-    plt.scatter(matXY[:,0], matXY[:,1], c=dbmodel.labels_)
-    plt.scatter(matXY[noise_sample_mask, 0], matXY[noise_sample_mask, 1], c='k', label="noise")
-    plt.xlabel('Longitude', size=14)
-    plt.ylabel('Latitude', size=14)
-    plt.legend()
-    plt.title('DBSCAN (eps='+str(epsilon)+', min_sample='+str(max_pts)+')', size=14)
-    plt.show()
-    #figDBSCAN2D.savefig('./img/k2c-dbscan-basic-2D.png')
-
-
-# FUNCTION THAT ANALYZES AND RUN DBSCAN
-
-def get_district_cluster(arrondissement, data, epsilon=False, max_pts=False):
-    matXY = data.loc[(data.zipcode==arrondissement),['longitude','latitude']].as_matrix()
     n_data = matXY.shape[0]
 
     fig = plt.figure(figsize=(15,5))

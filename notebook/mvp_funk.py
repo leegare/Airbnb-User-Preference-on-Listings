@@ -37,31 +37,24 @@ parameters required to run a DBSCANself.
 '''
 
 '''----------------Global Variables--------------------------'''
-'''Current necessary columns'''
-host_col = ['id','host_id', 'host_since',
-       'host_response_time', 'host_neighbourhood', 'host_listings_count',
-       'host_verifications', 'host_is_superhost']
-loc_col = ['city', 'zipcode',
-       'latitude', 'longitude']
-prop_col = ['property_type', 'room_type', 'accommodates',
-       'bathrooms', 'beds', 'bed_type', 'amenities', 'price',
-       'guests_included', 'extra_people', 'minimum_nights', 'maximum_nights',
-       'availability_365', 'instant_bookable', 'cancellation_policy']
-guest_col = ['require_guest_profile_picture', 'require_guest_phone_verification']
-rvw_col = ['number_of_reviews', 'first_review', 'last_review',
-       'review_scores_rating', 'review_scores_accuracy',
-       'review_scores_cleanliness', 'review_scores_checkin',
-       'review_scores_communication', 'review_scores_location',
-       'review_scores_value', 'reviews_per_month']
 
-'''Data prior to EDA'''
+usecols = ['listing_id','host_id', 'host_since', 'host_response_time','host_is_superhost',
+       'zipcode', 'latitude', 'longitude',
+       'property_type', 'room_type', 'accommodates','bathrooms', 'bed_type',
+       'amenities', 'amty_per','price',
+       'guests_included', 'minimum_nights','availability_365',
+       'first_review', 'last_review', 'review_scores_rating','review_scores_accuracy',
+       'review_scores_cleanliness','review_scores_checkin', 'review_scores_communication',
+       'review_scores_location', 'review_scores_value', 'number_of_reviews',
+       'reviews_per_month']
+
 int_data = '../data/processed/data.csv'
-usecols = host_col+loc_col+prop_col+guest_col+rvw_col
-mybar_data = pd.read_csv(int_data, index_col=1, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
+data = pd.read_csv(int_data, index_col=0, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
+
 int_data = '../data/raw/paris_reviews.csv'
 reviews_data = pd.read_csv(int_data, parse_dates=['date'], usecols=['listing_id','date','id'])
-int_data = '../data/interim/paris_attractions.csv'
-paris_attractions = pd.read_csv(int_data)
+
+paris_attractions = pd.read_csv('../data/processed/paris_attractions.csv')
 
 orate = {0.4:5, 0.6:15, 0.8:20, 0.9:25, 0.925:35, 0.95:45, 0.975:55, 1:75}
 
