@@ -28,19 +28,6 @@ import pandas as pd
                      LOCAL VARIABLES
 ################################################################'''
 
-usecols = ['listing_id','host_id', 'host_since', 'host_response_time','host_is_superhost',
-       'zipcode', 'latitude', 'longitude',
-       'property_type', 'room_type', 'accommodates','bathrooms', 'bed_type',
-       'amenities', 'amty_per','price',
-       'guests_included', 'minimum_nights','availability_365',
-       'first_review', 'last_review', 'review_scores_rating','review_scores_accuracy',
-       'review_scores_cleanliness','review_scores_checkin', 'review_scores_communication',
-       'review_scores_location', 'review_scores_value', 'number_of_reviews',
-       'reviews_per_month']
-
-int_data = '../data/processed/data.csv'
-data = pd.read_csv(int_data, index_col=0, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
-
 cpzl = {
 75001:'yellow',75002:'blue',75003:'dimgray',75004:'darkslateblue',75005:'olive',
 75006:'green',75007:'cyan',75008:'lime',75009:'purple',75010:'maroon',

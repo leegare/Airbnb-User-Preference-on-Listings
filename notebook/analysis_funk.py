@@ -4,8 +4,30 @@ import matplotlib.image as mpimg
 import seaborn as sns
 from bisect import bisect
 
+# Update matplotlib defaults to something nicer
+plt_update = {'font.size':20,
+              'xtick.labelsize':14,
+              'ytick.labelsize':14,
+              'figure.figsize':[10.0,5.0],
+              'axes.labelsize':20,
+              'axes.titlesize':20,
+              'lines.linewidth':3}
+sns.set(style="darkgrid", color_codes=True)
+plt.rcParams.update(plt_update)
+
 '''---------------------PARIS MAP PLOT---------------------'''
 
+
+def print_listings(m, s):
+    fig = plt.figure(figsize=(25,10))
+    if 'color' in m.columns:
+        c = m.color.values
+    else:
+        c = 'royalblue'
+    plt.scatter(m.longitude.values, m.latitude.values, s=s, c=c, zorder=2, alpha=1)
+    plt.show()
+
+    
 '''Function that contains latitude and longitudes of the districts limits'''
 def get_arrondissement_info():
 # Arrondissements Coordinates
@@ -94,7 +116,7 @@ def print_map(coord, res='c', arrn_lim=1, title_map='Paris', l_size=10, l_color=
         l_color = coord['zipcode'].apply(lambda x: cpzl[x])
 
     lis_xpt, lis_ypt = m(coord.longitude.values, coord.latitude.values)
-    m.scatter(lis_xpt, lis_ypt, s=l_size, c=l_color, zorder=2, alpha=l_alf, )
+    m.scatter(lis_xpt, lis_ypt, s=l_size, c=l_color, zorder=2, alpha=l_alf)
 
 
     plt.title(title_map)

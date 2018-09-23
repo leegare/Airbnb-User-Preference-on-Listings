@@ -39,6 +39,51 @@ plt_update = {'font.size':20,
 sns.set(style="darkgrid", color_codes=True)
 plt.rcParams.update(plt_update)
 
+
+'''------------------PRE-PROCESSING VARIABLES----------------'''
+
+'''Breakpoints to map the sparse price'''
+breakpoints = [20, 40, 60, 80, 100, 120, 160, 200, 300, 500, 800, 1000, 5000, 10000]
+
+'''Current necessary columns'''
+host_col = ['listing_id','host_id', 'host_since',
+       'host_response_time', 'host_neighbourhood', 'host_listings_count',
+       'host_verifications', 'host_is_superhost']
+loc_col = ['city', 'zipcode',
+       'latitude', 'longitude']
+prop_col = ['property_type', 'room_type', 'accommodates',
+       'bathrooms', 'beds', 'bed_type', 'amenities', 'price',
+       'guests_included', 'extra_people', 'minimum_nights', 'maximum_nights',
+       'availability_365', 'instant_bookable', 'cancellation_policy']
+guest_col = ['require_guest_profile_picture', 'require_guest_phone_verification']
+rvw_col = ['number_of_reviews', 'first_review', 'last_review',
+       'review_scores_rating', 'review_scores_accuracy',
+       'review_scores_cleanliness', 'review_scores_checkin',
+       'review_scores_communication', 'review_scores_location',
+       'review_scores_value', 'reviews_per_month']
+
+
+'''Data prior to EDA'''
+int_data = '../data/interim/data.csv'
+usecols = host_col+loc_col+prop_col+guest_col+rvw_col
+mybar_data = pd.read_csv(int_data, index_col=0, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
+
+int_data = '../data/raw/paris_reviews.csv'
+reviews_data = pd.read_csv(int_data, parse_dates=['date'], usecols=['listing_id','date','id'])
+
+a_data = pd.read_csv('../data/interim/paris_attractions.csv')
+
+specific_outliers = ['french first republic','storming of the bastille', 'liberation of paris',
+                    'alfred dreyfus','dalida','hundred days offensive', 'louis braille',
+                     'socialist party (france)', 'tf1','star academy (french tv series)',
+                    'italie 13','italie 2', 'topography of paris', 'ramón emeterio betances',
+                    'dpsd', 'diptyque', 'le train bleu (restaurant)', 'ménilmontant','bagnolet',
+                    'belleville, paris','bercy','direction de la surveillance du territoire',
+                    'directorate-general for external security','international council of museums',
+                    'jacques pierre brissot','la fondation pour la mémoire de la déportation',
+                    'schola cantorum de paris','val de seine']
+
+
 '''------------------PRE-PROCESSING FUNCTIONS----------------'''
 
 ''' NOT USED
@@ -77,45 +122,6 @@ def get_reviews_per_month():
     # Now group the df by listing and get the average of the review per month
     return rpm.groupby('listing_id').mean()
 
-'''------------------PRE-PROCESSING VARIABLES----------------'''
-
-'''Breakpoints to map the sparse price'''
-breakpoints = [20, 40, 60, 80, 100, 120, 160, 200, 300, 500, 800, 1000, 5000, 10000]
-
-'''Current necessary columns'''
-host_col = ['id','host_id', 'host_since',
-       'host_response_time', 'host_neighbourhood', 'host_listings_count',
-       'host_verifications', 'host_is_superhost']
-loc_col = ['city', 'zipcode',
-       'latitude', 'longitude']
-prop_col = ['property_type', 'room_type', 'accommodates',
-       'bathrooms', 'beds', 'bed_type', 'amenities', 'price',
-       'guests_included', 'extra_people', 'minimum_nights', 'maximum_nights',
-       'availability_365', 'instant_bookable', 'cancellation_policy']
-guest_col = ['require_guest_profile_picture', 'require_guest_phone_verification']
-rvw_col = ['number_of_reviews', 'first_review', 'last_review',
-       'review_scores_rating', 'review_scores_accuracy',
-       'review_scores_cleanliness', 'review_scores_checkin',
-       'review_scores_communication', 'review_scores_location',
-       'review_scores_value', 'reviews_per_month']
-
-'''Data prior to EDA'''
-int_data = '../data/interim/data.csv'
-usecols = host_col+loc_col+prop_col+guest_col+rvw_col
-mybar_data = pd.read_csv(int_data, index_col=0, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
-
-int_data = '../data/raw/paris_reviews.csv'
-reviews_data = pd.read_csv(int_data, parse_dates=['date'], usecols=['listing_id','date','id'])
-
-specific_outliers = ['french first republic','storming of the bastille', 'liberation of paris',
-                    'alfred dreyfus','dalida','hundred days offensive', 'louis braille',
-                     'socialist party (france)', 'tf1','star academy (french tv series)',
-                    'italie 13','italie 2', 'topography of paris', 'ramón emeterio betances',
-                    'dpsd', 'diptyque', 'le train bleu (restaurant)', 'ménilmontant','bagnolet',
-                    'belleville, paris','bercy','direction de la surveillance du territoire',
-                    'directorate-general for external security','international council of museums',
-                    'jacques pierre brissot','la fondation pour la mémoire de la déportation',
-                    'schola cantorum de paris','val de seine']
 
 #---------------------- EDA FUNCTIONS -----------------------
 

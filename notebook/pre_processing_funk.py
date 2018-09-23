@@ -43,7 +43,7 @@ plt.rcParams.update(plt_update)
 
 def confirm_files(project_name, url):
 
-# Local Variables
+    # Local Variables
     gzip_filename = url.split("/")[-1]
     filename = gzip_filename[:-3]
 
@@ -70,8 +70,25 @@ def confirm_files(project_name, url):
         os.makedirs('data/processed')
 
 
+    # Check if the raw, interim and processed folders are there:
+    os.chdir('data')
+    f = []
+    for (dirpath, dirnames, filenames) in walk(os.getcwd()):
+        f.extend(filenames)
+        break
+
+    data_folders = ['raw','interim','processed']
+    if len(dirnames) != 3:
+        for f in data_folders:
+            try:
+                os.makedirs(f)
+
+            except:
+                print(f,'already exists')
+
+
     # Check if the csv files are there:
-    os.chdir('data/raw')
+    os.chdir('raw')
     f = []
     for (dirpath, dirnames, filenames) in walk(os.getcwd()):
         f.extend(filenames)

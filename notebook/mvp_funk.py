@@ -54,7 +54,7 @@ data = pd.read_csv(int_data, index_col=0, parse_dates=['host_since','first_revie
 int_data = '../data/raw/paris_reviews.csv'
 reviews_data = pd.read_csv(int_data, parse_dates=['date'], usecols=['listing_id','date','id'])
 
-paris_attractions = pd.read_csv('../data/processed/paris_attractions.csv')
+paris_attractions = pd.read_csv('../data/processed/paris_attractions.csv', index_col=0)
 
 orate = {0.4:5, 0.6:15, 0.8:20, 0.9:25, 0.925:35, 0.95:45, 0.975:55, 1:75}
 
@@ -90,7 +90,8 @@ def get_interval_on_rate(total):
 --------------------- IN COMPRESSING THE LISTINGS IN THEIR ARRONDISSEMENT '''
 
 
-def print_arrondissement(matXY):
+def print_arrondissement(arrondissement):
+    matXY = data.loc[data.zipcode==arrondissement, ['longitude','latitude']].as_matrix()
     fig = plt.figure(figsize=(10,5))
     plt.scatter(matXY[:,0], matXY[:,1], s=50, c='royalblue', alpha=0.9)
     plt.show()
