@@ -32,8 +32,6 @@ get_district_cluster
 Plots data for zipcode = arrondissement and analyzes it to retrieve the
 parameters required to run a DBSCANself.
 
-
-
 '''
 
 '''----------------Global Variables--------------------------'''
@@ -56,35 +54,10 @@ reviews_data = pd.read_csv(int_data, parse_dates=['date'], usecols=['listing_id'
 
 paris_attractions = pd.read_csv('../data/processed/paris_attractions.csv', index_col=0)
 
-orate = {0.4:5, 0.6:15, 0.8:20, 0.9:25, 0.925:35, 0.95:45, 0.975:55, 1:75}
+
 
 '''---------------------FUNCTIONS---------------------'''
 
-'''Function that takes the number of bookings per year times the minimum
-number of nights of a listing and returns it
-divided by the number of days available. Basically it captures the
-occupancy_rate
-'''
-def get_occupancy_rate(r):
-
-    number_of_months = 12
-    min_nights = 4.5
-    booking_per_year = r.reviews_per_month * number_of_months
-    days_available = r.availability_365
-
-    if days_available == 0: # For those with 0 availability
-        days_available = 1
-
-    #    print(days_available/(booking_per_year)>=n_nights,'Listing with',days_available,'/365 days available had',
-    #      r.booking_per_year,'guests, staying for a max of',days_available/booking_per_year,'nights,
-    #      so rate is:',occupancy_rate)
-
-    return min(1, (min_nights*booking_per_year)/days_available)
-
-
-'''Function that reduces the number of unique values into larger intervals'''
-def get_interval_on_rate(total):
-    return orate[bisect(orate, total)-1]
 
 '''---------------------FUNCTIONS RELATED TO CLUSTERING---------------------
 --------------------- IN COMPRESSING THE LISTINGS IN THEIR ARRONDISSEMENT '''

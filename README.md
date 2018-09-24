@@ -1,18 +1,18 @@
-# MVP: Hosting per location or per property? 
+# Airbnb: Hosting the location or the property? 
 ---
 # Introduction
 
-Tourism is a major business in pretty much every country who has places and experiences to offer and that catch the interest of foreigners. Essential services for the tourists ranging from restaurants to hotels have flourished and in particular we've seen the company Airbnb enter in a peculiar manner. 
+Tourism is a major business in pretty much every country who has places and experiences to offer and catch the interest of foreigners. Essential services for the tourists ranging from restaurants to hotels have flourished and we've seen the company Airbnb enter in a peculiar manner. 
 
-In the old days when hotels were sparse, tourists had no choice of its location so they resorted to choose establishments with other appealing features. Then came Airbnb and democratized the location giving tourists the option. 
+In the old days when hotels were sparse, tourists had no choice of its location so they resorted to choose establishments with other appealing features. Then came Airbnb and democratized the location giving tourists the option to get places nearby the touristy attractions. 
 
-I'd like to understand how tourists make choices involving hotel hunting and in order to have an accurate study a huge dataset is needed. A city with a myriad of listings has to be a city in the top ten places to visit and among them there are no best candidates than Paris in France. The tourist capital of the world, with a breaking record 40 million tourists per year, Paris is prepared to welcome them. 
+I'd like to understand how tourists make choices involving hotel hunting and in order to have an accurate study a huge dataset is needed. A city with a myriad of listings has to be a city in the top ten places to visit and among them, there are no best candidates than Paris in France. The tourist capital of the world, with a breaking record 40 million tourists per year, Paris is prepared to welcome them. 
 
 ---
 
 # Background
 
-Having lived in Paris for 4 years I became a francophiliac. To avoid forgetting the beautiful language they speak I keep up with the actualities in France and it was when I stumbled with this video that caught my attention (https://www.youtube.com/watch?v=Iywwa3wfhoU&t=35s). It's about Airbnb and its disruptive innovation that is affecting the residential housing in tourist-concentrated cities like Barcelona and Paris.
+Having lived in Paris for 4 years I became a francophiliac. To avoid forgetting the beautiful language they speak I keep up with the actualities in France and I was getting updates when I stumbled with this video that caught my attention:(https://www.youtube.com/watch?v=Iywwa3wfhoU&t=35s). It's about Airbnb and its disruptive innovation that is affecting the residential housing in tourist-concentrated cities like Barcelona and Paris.
 
 ___
 # *Are Airbnb guests more interested in listings that are in convenient neighbourhoods regardless of the condition of the property?*
@@ -42,20 +42,30 @@ The location information for listings are anonymized by Airbnb. In practice, thi
 Neighbourhood names for each listing are compiled by comparing the listing's geographic coordinates with a city's definition of neighbourhoods. Airbnb neighbourhood names are not used because of their inaccuracies.
 
 ---
-
 # Initial Data Cleaning Approach and Exploratory Findings
 
 From the 91 columns, I filtered out 30 columns containing paragraphs of descriptions and reviews and variables that were unnecessary (correlated) or irrelevant to the analysis. On the second filter, columns with a high volume of missing or incorrect values got removed leaving the dataset with 49 pertinent columns. I then grouped them in 5 categories: Host qualities, Listing specs, Location data and Review scores.  
 
-The zipcodes and the cities were either inaccurate or mispelled. In order to clean them, I transformed the zipcodes into their numerical standard form. Then I grouped all the listings by zipcode and took the common city name to be the official name for the whole zipcode. 
+## Cleaning listings coordinates
 
+I found 3 types of innacuracies regarding the zipcodes, city name and coordinates. The zipcodes and the cities were either mispelled or unrelated. After standardizing the cities and zipcodes I grouped all the listings by zipcode and took the common city name to be the official name for the whole zipcode. The following figure shows the listings classified by color according to their zipcode.  
+
+![**Figure PRE original listings per zipcode**](images/Centroids_and_original_listings.png)
+
+An LOF process showed 208 listings with either an incorrect zipcode or coordinates. I had to assume that the coordinates were correct so I proceeded to adjust the zipcode according to its nearest zipcode center of mass as shown below: 
+
+![**Figure PRE original listings per zipcode**](images/Centroids_and_final_listings.png)
+
+
+
+---
 ## EDA: What are the factors that we can use to consider a good listing?
 
 ### *In host qualities:*
 
 HOST_RESPONSE_TIME  
 
-It's a categorical variable holding 4 unique values: 'within an hour', 'within a day', 'within a few hours','a few days or more' AND 11067 null values. 
+It's a categorical variable holding 4 unique values: 'within an hour', 'within a day', 'within a few hours','a few days or more'.
 
 A good host would be attentive to its guest's needs. The guest will evaluate the host's response time for every request made depending on its urgency to satisfy and/or difficulty to provide an accurate answer. The dataset shows that 21% have very reactive hosts who replied within the hour, 50% of hosts answered within a few hours and 24% within the day, the remaning 2.8% refer to hosts that for some reason delivered or not an answer outside of the usual delays. 
 
@@ -111,7 +121,7 @@ The price range resulted a bit sparse so I assigned them into broader intervals:
 
 ![**Figure Price_range**](images/EDA_price_range.png)
 
-The dataset shows 50 unique zipcodes and 50 unique cities (or districts) where Paris has approximately 20 zipcodes (or the number of its districts a.k.a arrondissements) and the remaining zipcodes greater than 75020 correspond to the suburbs. In the figure below are the listings in Paris only, where there are a few outliers quite far from the city limits. The size of each listing is proportional to its price
+The dataset shows 50 unique zipcodes and 50 unique cities (or districts) where Paris has approximately 20 zipcodes (or the number of its districts a.k.a arrondissements) and the remaining zipcodes greater than 75020 correspond to the suburbs. There are 269 listings in the suburbs, a number so negligeable it will not affect the results if removed from the dataset. In the figure below are the listings in Paris only, where there are a few outliers quite far from the city limits. The size of each listing is proportional to its price
 
 ![**Figure Districts of Paris**](images/EDA_Arrondissements_copie.png)
 
@@ -140,54 +150,57 @@ Set of variables with scores for 6 different aspects of the listing:
 
 ![**Figure Districts of Paris**](images/EDA_review_scores.png)
 
+
+
 ---
+# Research and Findings?? 
 
-# Initial Research Findings
+## Getting the Occupancy rate:
 
-### Getting the Occupancy rate:
-
-Airbnb guests may leave a review after their stay, and these can be used as an indicator of airbnb activity (although not all guests leave a review, so the actual booking activity would be much higher). The occupancy rate according to Airbnb would be: 
+Airbnb guests may leave one review after their stay, therefore it can be used as an indicator of airbnb activity. However this option is not obligatory and therefore not all guests leave a review, so the actual booking activity could be much higher. Assuming that this practice of leaving reviews is constant.  The occupancy rate according to Airbnb would be: 
 
 >***Occupancy_rate = MAX(average_length_of_stay, minimum_nights)x(number_of_reviews)***
 
-An average length of stay is configured for each city, and this, multiplied by the estimated bookings for each listing over a period gives the occupancy rate. For Paris, the average_length_of_stay is set to 3 nights/booking 
+An average length of stay is configured for each city, multiplied by the estimated bookings for each listing over a period gives the occupancy rate. In this dataset, the average_length_of_stay is set to 4.5 nights. 
 
-**Things to consider:**
+Some things to consider is that a listing that just started hosting with Airbnb is less likely to have as much reviews as an older listing. There's at least 7000 listings whose first review dates from this year! To counteract the "old vs new" bias, I will normalize the occupancy rate per month. 
 
-- The listing's ancienty. A listing that just started in Airbnb is less likely to have as much reviews as an older listing. There's at least 7000 listings whose first review dates from this year! 
+A listing with high availability is susceptible to get more reviews and thus a higher occupancy rate. An Airbnb host can setup a calendar for their listing so that it's only available for a few days or weeks a year.  Other listings are available all year round (except for when it is already booked). 
 
-*To counteract the ancienty vs new listings bias, I will normalize the occupancy rate per month and assign its average rate as such. The dataset provides a column called reviews per month.*
+This poses an ambiguity problem since it can either mean the number of days the listing is supposed to be available all year roudn but it can also mean the remaining days a listing is available for booking thus having a low availability. 
 
-- The availability.  A listing with a high availability is susceptible to get more reviews and thus increasing its occupancy rate. An Airbnb host can setup a calendar for their listing so that it is only available for a few days or weeks a year. Other listings are available all year round (except for when it is already booked). This poses a problem as the availability cannot be considered an accurate measure since it can either show the number of days the listing is supposed to be available but it can also show the remaining days a listing hasn't yet been booked thus lowering its availability.
+In order to get an accurate rate, I will not consider the availability. So the formula shorts to: 
 
-***SCENARIO 1: ***The availability column means the number of days the listing is available per year, set by the host.
+> ***Average occupancy rate per month = minimum nights x average reviews per month***
 
-If the availability column is considered, then those listings with 0 days available will have to be removed or their value set to a non-zero one. There are 13045 listings that have no availability available, aside from that, the average availability is 145 days. 
+..which basically says that the higher the rate of bookings (reviews) per month, the higher the occupancy rate and thus the minimum nights can be removed as it's just a constant. The distribution yielded not a very wide spreaded shape. 
 
-Airbnb divides these listings in two categories: High availability for those listings with more than 120 days available and low availability for the rest. In this analysis I will not categorize the listings in these two broad groups but simply assign a weight proportional to its own availability. 
+Most listings have a really low rate compared to few of their fellow outlier listings, the next steps are an attempt to extend the spectrum of normal rate listings and compress that of the outliers. 
 
-Then the occupancy rate has to be capped by:
+An attempt to exploit the discriminating power of this rate is to ceiling those outliers to the q3+1.5*IQR value.
 
-> *** Average occupancy_rate per year <= min(1, (min_nights x booking_per_year)/days_available)***
+![**Figure Districts of Paris**](images/PROJ_Occupancy_rate_map.png)
 
-.. since the term *(min_nights x booking_per_year)/days_available* can be higher than 1 and therefore not fair for listings with low availability. 
 
-In this scenario the occupancy rate distribution is boxploted below: 
+---
+## Getting the Listings review rate:
 
-![**Figure Districts of Paris**](images/PROJ_Occupancy_rate_scenario_1.png)
+#### How can a grading system be implemented using the following parameters: 
+- HOST_SUPERHOST: will have values 100 or 0
+- ROOM_TYPE: will be mapped with normalized values as such: 
+'Entire home/apt' 100 pts, 'Private room' 50 pts and 'Shared room' 0 pts
+- BED_TYPE: will be mapped with normalized values as such: 
+Real bed: 100 pts, Pull-out Sofa, Couch, Futon and Airbed: 50pts
+- BATHROOMS: will be normalized by 100 as the more bathrooms the fancier the listing is. 
+- AMENITIES: has 100 for any listing with 100% of the essential amenities.   
+- REVIEW SCORES: They are already normalized scores. 
 
-In this scenario the rate averages 0.752 and the median is 1. 
+![**Figure Districts of Paris**](images/PROJ_listing_review_rate.png)
 
-***SCENARIO 2*** The availability column refers to the days of the year that remain available and therefore there is no value in this variable as it doesnt describe the availability. The occupancy rate will be the one defined by Airbnb in the first case: 
 
-> *Average occupancy_rate per year = min_nights x bookings per year = 12 x min_nights x reviews_per_month*
 
-where basically says that the higher the average of bookings (reviews) per year, the higher the rate and thus the minimum nights can be removed as it is just a constant. The distribution yielded: 
-
-![**Figure Districts of Paris**](images/PROJ_Occupancy_rate_scenario_2.png)
 
 ___
-
 # Further Research and Analysis
 
 In order to get the most popular listings, the scenario #2 looks more promising as the occupancy rate shows a higher discriminatory power. The next steps are to determine the best listing according to the host qualities, listing specs, location (in terms of price and public transportation) and review scores. Thirdly I will insert the coordinates of the touristy places and get those listings that are closest and pull out the proportion of popular vs unpopular listings. 
