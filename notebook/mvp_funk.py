@@ -49,7 +49,7 @@ usecols = ['listing_id','host_id', 'host_since', 'host_response_time','host_is_s
 int_data = '../data/processed/data.csv'
 data = pd.read_csv(int_data, index_col=0, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
 
-int_data = '../data/raw/paris_reviews.csv'
+int_data = '../data/raw/reviews.csv'
 reviews_data = pd.read_csv(int_data, parse_dates=['date'], usecols=['listing_id','date','id'])
 
 paris_attractions = pd.read_csv('../data/processed/paris_attractions.csv', index_col=0)

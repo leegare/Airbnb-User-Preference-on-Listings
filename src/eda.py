@@ -3,7 +3,7 @@
 # IMPORT VARIABLES, LIBRARIES AND FUNCTIONS
 
 from eda_funk import * # Stored functions and variables regarding EDA analysis
-from analysis_funk import * # Stored functions and variables to plot the map of Paris
+#from analysis_funk import * # Stored functions and variables to plot the map of Paris
 print('EDA loading')
 data = mybar_data
 

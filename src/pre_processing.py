@@ -1,5 +1,4 @@
 from pre_processing_funk import *
-from analysis_funk import *
 
 # File Urls
 data_raw_path = '../data/raw'

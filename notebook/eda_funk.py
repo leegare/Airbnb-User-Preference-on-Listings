@@ -68,8 +68,7 @@ int_data = '../data/interim/data.csv'
 usecols = host_col+loc_col+prop_col+guest_col+rvw_col
 mybar_data = pd.read_csv(int_data, index_col=0, parse_dates=['host_since','first_review','last_review'], usecols=usecols)
 
-int_data = '../data/raw/paris_reviews.csv'
-reviews_data = pd.read_csv(int_data, parse_dates=['date'], usecols=['listing_id','date','id'])
+reviews_data = pd.read_csv('../data/raw/reviews.csv', parse_dates=['date'], usecols=['listing_id','date','id'])
 
 a_data = pd.read_csv('../data/interim/paris_attractions.csv')
 
